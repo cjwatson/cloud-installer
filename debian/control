@@ -6,6 +6,7 @@ Build-Depends: debhelper (>= 9),
                dh-python,
                python3-all,
                python3-lxc,
+               python3-mako,
                python3-mock,
                python3-nose,
                python3-oauthlib,
@@ -15,8 +16,7 @@ Build-Depends: debhelper (>= 9),
                python3-setuptools,
                python3-urwid,
                python3-ws4py,
-               python3-yaml,
-               python3-mako
+               python3-yaml
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/cloud-installer
 X-Python3-Version: >= 3.4
@@ -29,6 +29,7 @@ Depends: gawk,
          pwgen,
          python3-all,
          python3-lxc,
+         python3-mako,
          python3-mock,
          python3-nose,
          python3-oauthlib,
@@ -39,7 +40,6 @@ Depends: gawk,
          python3-urwid,
          python3-ws4py,
          python3-yaml,
-         python3-mako,
          ${misc:Depends},
          ${python3:Depends}
 Description: Ubuntu Cloud installer

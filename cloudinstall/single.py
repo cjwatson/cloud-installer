@@ -20,7 +20,7 @@
 
 import sys
 import os
-from cloudinstall import utils
+import utils
 from cloudinstall.utils import dns
 from cloudinstall.provider import LXC
 from cloudinstall.juju import configure_manual_provider

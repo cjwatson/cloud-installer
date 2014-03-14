@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 
+DH_ALWAYS_EXCLUDE=.git
 export PYBUILD_NAME=cloudinstall
 export PYBUILD_DISABLE_python2=1
-export PYBUILD_INSTALL_DIR=usr/share/cloud-installer/
 export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-installer/ \
 	--install-data=usr/ \
 	--install-scripts=usr/share/cloud-installer/bin/ \
@@ -11,9 +11,6 @@ export PYBUILD_INSTALL_ARGS_python3=--install-lib=usr/share/cloud-installer/ \
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
-
-override_dh_installinit:
-	dh_installinit --no-start
 
 override_dh_auto_test:
 	@echo "No tests."
