@@ -18,16 +18,19 @@
 
 from subprocess import Popen, PIPE, DEVNULL, call, STDOUT
 from contextlib import contextmanager
+from mako.template import Template
+from mako.lookup import TemplateLookup
 import os
 import re
 import string
 import random
 import pwd
-import tempita
 
 # String with number of minutes, or None.
 blank_len = None
 
+t_lookup = TemplateLookup(directories=['/usr/share/cloud-installer/templates'],
+                          module_directory='/tmp/mako_modules')
 
 def get_install_user():
     """ Query install user for ID
@@ -40,6 +43,10 @@ def get_install_user():
 def get_share_dir():
     """ Returns share data dir """
     return "/usr/share/cloud-installer"
+
+def get_template_dir():
+    """ Returns template directory """
+    return os.path.join(get_share_dir(), 'templates')
 
 def get_command_output(command, timeout=300):
     """ Execute command through system shell
@@ -199,11 +206,10 @@ def random_string(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
 
-def render(tmpl, data):
+def render(tmpl, **kwargs):
     """ processes a template file with substitution
 
     @param tmpl: path to template file
-    @param data: variables to substitute in template
+    @param **kwargs: variables to substitute in template
     """
-    _tmpl = tempita.Template.from_filename(tmpl, data)
-    return _tmpl.substitute()
+    return t_lookup.get_template(tmpl).render(**kwargs)

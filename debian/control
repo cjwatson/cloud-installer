@@ -16,7 +16,7 @@ Build-Depends: debhelper (>= 9),
                python3-urwid,
                python3-ws4py,
                python3-yaml,
-               python3-tempita
+               python3-mako
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/cloud-installer
 X-Python3-Version: >= 3.4
@@ -39,7 +39,7 @@ Depends: gawk,
          python3-urwid,
          python3-ws4py,
          python3-yaml,
-         python3-tempita,
+         python3-mako,
          ${misc:Depends},
          ${python3:Depends}
 Description: Ubuntu Cloud installer

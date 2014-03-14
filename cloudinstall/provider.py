@@ -29,8 +29,7 @@ class LXC(object):
     def create(self):
         """ Create lxc container """
         self.container.create("ubuntu-cloud", 0,
-                              {'dist': "ubuntu",
-                               'release': "trusty",
+                              {'release': "trusty",
                                'arch': self.arch})
 
     @property

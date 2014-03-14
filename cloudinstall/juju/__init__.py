@@ -19,9 +19,12 @@
 import os
 from cloudinstall import utils
 
-def env_yaml_template():
-    """ path to environments.yaml """
-    return os.path.join(utils.get_share_dir(), 'templates/environments.yaml')
+def ensure_juju_dir():
+    """ Makes sure our .juju directory exists """
+    _juju_dir = os.path.join(utils.get_install_user()[1], '.juju')
+    if not os.path.exists(_juju_dir):
+        os.makedirs(_juju_dir)
+    return
 
 def configure_manual_provider(admin_secret, storage_auth_key):
     """ Creates necessary yaml file for a manual provider
@@ -29,11 +32,11 @@ def configure_manual_provider(admin_secret, storage_auth_key):
     @param admin_secret: Administrator password for juju bootstrap
     @param storage_auth_key: storage key for bootstrap
     """
+    ensure_juju_dir()
     out_file = os.path.join(utils.get_install_user()[1], '.juju/environments.yaml')
-    data = {'juju_env' : 'manual',
-            'admin_secret' : admin_secret,
-            'storage_auth_key' : storage_auth_key}
-    out = utils.render(env_yaml_template(), data)
+    out = utils.render('environments.yaml', juju_env='manual',
+                                                 admin_secret=admin_secret,
+                                                 storage_auth_key=storage_auth_key)
     with open(out_file, 'w') as f:
         f.write(out)
         return True
@@ -46,12 +49,12 @@ def configure_maas_provider(address, maas_creds, admin_secret):
     @param maas_creds: maas oauth credentials
     @param admin_secret: admin secret
     """
+    ensure_juju_dir()
     out_file = os.path.join(utils.get_install_user()[1], '.juju/environments.yaml')
-    data = {'juju_env' : 'maas',
-            'admin_secret' : admin_secret,
-            'maas_address' : address,
-            'maas_creds' : maas_creds}
-    out = utils.render(env_yaml_template(), data)
+    out = utils.render('environments.yaml', juju_env='maas',
+                                                 admin_secret=admin_secret,
+                                                 maas_address=address,
+                                                 maas_creds=maas_creds)
     with open(out_file, 'w') as f:
         f.write(out)
         return True

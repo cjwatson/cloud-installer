@@ -48,10 +48,10 @@ def main(args):
         print("Could not generate ssh keys")
         return 1
 
-    ret = dns.configure_manual_dns()
-    if not ret:
-        print("Unable to configure dns")
-        return 1
+    #ret = dns.configure_manual_dns()
+    #if not ret:
+        #print("Unable to configure dns")
+        #return 1
 
     ret = configure_manual_provider(admin_secret, storage_auth_key)
     if not ret:
