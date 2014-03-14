@@ -129,7 +129,7 @@ def poll_state(auth):
     @param auth: MAAS Auth class
     """
     # Capture Juju state
-    juju = utils._run('juju status')
+    juju = utils.get_command_output('juju status')
     if not juju:
         raise Exception("Juju State is empty!")
     juju = JujuState(StringIO(juju.decode('ascii')))

@@ -1,0 +1,21 @@
+{{default series = 'precise'}}
+{{if 'maas' in juju_env}}
+default: maas
+environments:
+  maas:
+    type: maas
+    maas-server: 'http://{{maas_address}}/MAAS/'
+    maas-oauth: '{{maas_creds}}'
+    admin-secret: {{admin_secret}}
+    default-series: {{series}}
+    authorized-keys-path: ~/.ssh/id_rsa.pub
+{{else}}
+default: manual
+environments:
+  manual:
+    type: manual
+    admin-secret: {{admin_secret}}
+    bootstrap-host: juju-bootstrap
+    bootstrap-user: ubuntu
+    storage-auth-key: {{storage_auth_key}}
+{{endif}}

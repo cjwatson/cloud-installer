@@ -55,7 +55,7 @@ STYLES = [
     ('error',        'white',      'dark red'),
 ]
 
-IS_TTY = re.match('/dev/tty[0-9]', utils._run('tty').decode('ascii'))
+IS_TTY = re.match('/dev/tty[0-9]', utils.get_command_output('tty')[1])
 
 TITLE_TEXT = "Pegasus - your cloud's scout"
 if not IS_TTY:

@@ -8,3 +8,4 @@ share/maas/import_pxe_files            usr/share/cloud-installer/maas-data
 share/maas/pserv.yaml                  usr/share/cloud-installer/maas-data
 share/multi.sh                         usr/share/cloud-installer/common
 share/single.sh                        usr/share/cloud-installer/common
+share/templates/*                      usr/share/cloud-installer/templates

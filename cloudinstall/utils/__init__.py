@@ -1,5 +1,5 @@
 #
-# utils.py - Helper utilies for cloud installer
+# utils/__init__.py - Helper utilies for cloud installer
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -22,10 +22,24 @@ import os
 import re
 import string
 import random
+import pwd
+import tempita
 
 # String with number of minutes, or None.
 blank_len = None
 
+
+def get_install_user():
+    """ Query install user for ID
+
+    @return: (user name, user home directory)
+    """
+    _user = pwd.getpwuid(1000)
+    return (_user.pw_name, _user.pw_dir)
+
+def get_share_dir():
+    """ Returns share data dir """
+    return "/usr/share/cloud-installer"
 
 def get_command_output(command, timeout=300):
     """ Execute command through system shell
@@ -43,6 +57,22 @@ def get_command_output(command, timeout=300):
               bufsize=-1, env=cmd_env, close_fds=True)
     stdout, stderr = p.communicate()
     return (p.returncode, stdout.decode('utf-8'), 0)
+
+def run_command(command, timeout=300):
+    """ Execute command through system shell
+
+    @return: returncode
+    """
+    cmd_env = os.environ.copy()
+    # set consistent locale
+    cmd_env['LC_ALL'] = 'C'
+    if timeout:
+        command = "timeout %ds %s" % (timeout, command)
+
+    p = Popen(command, shell=True,
+              stdout=DEVNULL, stderr=DEVNULL,
+              bufsize=-1, env=cmd_env, close_fds=True)
+    return p.returncode
 
 
 def get_network_interface(iface):
@@ -77,16 +107,60 @@ def get_network_interfaces():
     return interfaces
 
 
+def get_install_dir():
+    """ Returns install dir path"""
+    return os.path.join(get_install_user()[1], ".cloud-install")
+
+def gen_ssh_keys():
+    """ Generate ssh keys
+
+    @return: True on success False on failure
+    """
+    (user, home) = get_install_user()
+    ssh_path = os.path.join(home, '.ssh/id_rsa')
+    ret = run_command("sudo -u %s ssh-keygen -N '' -f %s" % (user, ssh_path))
+    if ret:
+        return False
+    return True
+
+def prep_install_dir():
+    """ Preps the cloud-install directory
+
+    """
+    _path = get_install_dir()
+    if not os.path.exists(_path):
+        os.makedirs(_path)
+
+def is_prepped():
+    """ Test for install directory """
+    return os.path.exists(get_install_dir())
+
+def install_pkgs(pkgs=[]):
+    """ Install pkgs
+
+    @param pkgs: List of packages to install
+    """
+    ret = run_command("DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -f -q -y %s </dev/null" % (' '.join(pkgs),))
+    if ret:
+        return False
+    return True
+
+def set_openstack_password():
+    """ Sets initial openstack password
+
+    @return: True on write False on failed to write
+    """
+    if is_prepped():
+        with open(os.path.join(get_install_dir(), 'openstack.passwd'), 'w') as f:
+            f.write(random_string())
+            return True
+    return False
+
 def partition(pred, iterable):
     yes, no = [], []
     for i in iterable:
         (yes if pred(i) else no).append(i)
     return (yes, no)
-
-
-# TODO: replace with check_output()
-def _run(cmd):
-    return Popen(cmd.split(), stdout=PIPE, stderr=DEVNULL).communicate()[0]
 
 
 def reset_blanking():
@@ -115,12 +189,21 @@ def console_blank():
     reset_blanking()
 
 
-def randomString(size=6, chars=string.ascii_uppercase + string.digits):
+def random_string(size=6, chars=string.ascii_uppercase + string.digits):
     """ Generate a random string
 
     @param size: number of string characters
     @param chars: range of characters (optional)
-
     @return: a random string
     """
     return ''.join(random.choice(chars) for x in range(size))
+
+
+def render(tmpl, data):
+    """ processes a template file with substitution
+
+    @param tmpl: path to template file
+    @param data: variables to substitute in template
+    """
+    _tmpl = tempita.Template.from_filename(tmpl, data)
+    return _tmpl.substitute()
