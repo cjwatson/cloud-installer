@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- mode: python; -*-
 #
-# single.py - Single installer
+# cloud-install-multi - Multi installer
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -20,13 +20,12 @@
 
 import sys
 import os
-import utils
-from cloudinstall.utils import dns
+from cloudinstall import utils
 from cloudinstall.provider import LXC
 from cloudinstall.juju import configure_manual_provider
 
 def main(args):
-    """ Single installer entrypoint """
+    """ Multi installer entrypoint """
     admin_secret = utils.random_string(size=32)
     storage_auth_key = utils.random_string(size=32)
     # TODO: make this configurable
@@ -38,7 +37,7 @@ def main(args):
             print("Could not prep install directory")
             return 1
 
-    ret = utils.install_pkgs(['cloud-install-single'])
+    ret = utils.install_pkgs(['cloud-install-multi'])
     if not ret:
         print("Unable to install cloud-install-single package.")
         return 1
@@ -48,10 +47,10 @@ def main(args):
         print("Could not generate ssh keys")
         return 1
 
-    #ret = dns.configure_manual_dns()
-    #if not ret:
-        #print("Unable to configure dns")
-        #return 1
+    ret = utils.dns.configure_manual_dns()
+    if not ret:
+        print("Unable to configure dns")
+        return 1
 
     ret = configure_manual_provider(admin_secret, storage_auth_key)
     if not ret:

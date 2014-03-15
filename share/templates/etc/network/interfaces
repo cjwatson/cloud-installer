@@ -1,0 +1,7 @@
+# -*- mode: mako; -*-
+auto lo
+iface lo inet loopback
+dns-nameservers 10.0.3.1
+% if 'maas' in juju_env:
+source /etc/network/interfaces.d/*.cfg
+% endif

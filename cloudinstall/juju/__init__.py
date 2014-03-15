@@ -35,8 +35,8 @@ def configure_manual_provider(admin_secret, storage_auth_key):
     ensure_juju_dir()
     out_file = os.path.join(utils.get_install_user()[1], '.juju/environments.yaml')
     out = utils.render('environments.yaml', juju_env='manual',
-                                                 admin_secret=admin_secret,
-                                                 storage_auth_key=storage_auth_key)
+                       admin_secret=admin_secret,
+                       storage_auth_key=storage_auth_key)
     with open(out_file, 'w') as f:
         f.write(out)
         return True

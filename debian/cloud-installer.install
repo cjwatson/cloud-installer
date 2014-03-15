@@ -1,4 +1,5 @@
 bin/cloud-install                      usr/share/cloud-installer
+bin/cloud-install-single               usr/share/cloud-installer
 bin/cloud-status                       usr/share/cloud-installer
 share/common.sh                        usr/share/cloud-installer/common
 share/configure.sh                     usr/share/cloud-installer/common

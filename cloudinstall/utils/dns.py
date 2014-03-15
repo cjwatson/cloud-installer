@@ -37,14 +37,12 @@ def configure_manual_dns():
         print("Could not restart lxc-net service")
         return False
 
-    with open('/etc/network/interfaces', 'r') as f:
-        _tmp = f.readlines()
-        #sed -e '/^iface lo inet loopback$/a\
-        #\ dns-nameservers 10.0.3.1' -i /etc/network/interfaces
+    with open('/etc/network/interfaces', 'w') as f:
+        out = utils.render('etc/network/interfaces', juju_env='manual')
+        f.write(out)
 
     ret = utils.run_command('ifdown lo; ifup lo')
     if ret:
         print("Could not turn off/on lo")
         return False
-
     return True

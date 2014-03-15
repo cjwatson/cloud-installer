@@ -18,7 +18,6 @@
 
 import lxc
 import uuid
-import cloudinstall.utils
 
 class LXC(object):
     def __init__(self, name=uuid.uuid1(), arch="amd64"):

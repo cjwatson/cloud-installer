@@ -22,10 +22,10 @@ if [ ! -e /etc/.cloud-installed ]; then
 	configureInstall
 	case $install_type in
 	Multi-system)
-		multiInstall
+		exec /usr/share/cloud-installer/bin/cloud-install-multi $@
 		;;
 	"Single system")
-		singleInstall
+		exec /usr/share/cloud-installer/bin/cloud-install-single $@
 		;;
 	"Landscape managed")
 		;;
