@@ -32,9 +32,6 @@ from cloudinstall import utils
 
 LOG_FILE = expanduser('~/.cloud-install/commands.log')
 
-# Time to lock in seconds
-LOCK_TIME = 120
-
 NODE_FORMAT = "|".join(["{fqdn:<20}", "{cpu_count:>6}", "{memory:>10}",
                         "{storage:>12}", "{agent_state:<12}", "{tags}"])
 NODE_HEADER = "|".join(["{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
@@ -447,9 +444,6 @@ class NodeViewMode(urwid.Frame):
         # the setup is complete and the overlay goes away).
         if isinstance(self.loop.widget, ConsoleMode):
             return
-        # don't accidentally unlock
-        if not isinstance(self.loop.widget, LockScreen):
-            self.loop.widget = val
 
     def total_nodes(self):
         return len(self.nodes._contents)
@@ -536,59 +530,20 @@ class NodeViewMode(urwid.Frame):
         return urwid.Frame.keypress(self, size, key)
 
 
-class LockScreen(urwid.Overlay):
-    LOCKED = "The screen is locked. Please enter a password (this is the " \
-             "password you entered for OpenStack during installation). "
-
-    INVALID = ("error", "Invalid password.")
-
-    IOERROR = ("error", "Problem accessing %s. Please make sure it contains "
-               "exactly one line that is the lock password."
-               % pegasus.PASSWORD_FILE)
-
-    def __init__(self, underlying, unlock):
-        self.unlock = unlock
-        self.password = urwid.Edit("Password: ", mask='*')
-        self.invalid = urwid.Text("")
-        w = urwid.ListBox([urwid.Text(self.LOCKED), self.invalid,
-                           self.password])
-        w = urwid.LineBox(w)
-        w = urwid.AttrWrap(w, "dialog")
-        urwid.Overlay.__init__(self, w, underlying, 'center', 60, 'middle', 8)
-
-    def keypress(self, size, key):
-        if key == 'enter':
-            if pegasus.OPENSTACK_PASSWORD is None:
-                self.invalid.set_text(self.IOERROR)
-            elif pegasus.OPENSTACK_PASSWORD == self.password.get_edit_text():
-                self.unlock()
-            else:
-                self.invalid.set_text(self.INVALID)
-                self.password.set_edit_text("")
-        else:
-            return urwid.Overlay.keypress(self, size, key)
-
-
 class PegasusGUI(urwid.MainLoop):
     def __init__(self, get_data):
         self.console = ConsoleMode()
         self.node_view = NodeViewMode(self, get_data,
                                       self.console.command_runner)
-        self.lock_ticks = 0  # start in a locked state
-        self.locked = False
         urwid.MainLoop.__init__(self, self.node_view.target, STYLES,
                                 unhandled_input=self._header_hotkeys)
 
     def _key_pressed(self, keys, raw):
         # We use this as an 'input filter' just to hook when keys are pressed;
         # we don't actually filter any input here.
-        self.lock_ticks = LOCK_TIME
         return keys
 
     def _header_hotkeys(self, key):
-        # if we are locked, don't do anything
-        if isinstance(self.widget, LockScreen):
-            return None
         if key == 'f8':
             if self.widget == self.console:
                 self.widget = self.node_view.target
@@ -598,25 +553,6 @@ class PegasusGUI(urwid.MainLoop):
             raise urwid.ExitMainLoop()
 
     def tick(self, unused_loop=None, unused_data=None):
-        # Only lock when we are in TTY mode.
-        if not self.locked and IS_TTY:
-            if self.lock_ticks == 0:
-                self.locked = True
-                old = self.widget
-
-                def unlock():
-                    # If the controller overlay finished its work while we were
-                    # locked, bypass it.
-                    nonlocal old
-                    if isinstance(old, ControllerOverlay) and old.done:
-                        old = self.node_view
-                    self.widget = old
-                    self.lock_ticks = LOCK_TIME
-                    self.locked = False
-                self.widget = LockScreen(old, unlock)
-            else:
-                self.lock_ticks = self.lock_ticks - 1
-
         self.console.tick()
         self.node_view.tick()
         self.set_alarm_in(1.0, self.tick)
