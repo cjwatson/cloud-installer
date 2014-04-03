@@ -20,6 +20,7 @@ from subprocess import check_output, check_call, DEVNULL
 import requests
 import yaml
 import sys
+import functools
 
 
 class MaasAuth:
@@ -105,3 +106,16 @@ class MaasAuth:
                    shell=True,
                    stderr=DEVNULL,
                    stdout=DEVNULL)
+
+def authenticated(method):
+    """ Decorate methods that require authenticated requests
+
+    If no api key is found we simply login and get it.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if not self.is_logged_in:
+            self.get_api_key('root')
+            self.login()
+        return method(self, *args, **kwargs)
+    return wrapper
