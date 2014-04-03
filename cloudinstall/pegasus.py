@@ -26,10 +26,8 @@ import tempfile
 import re
 import urllib
 
+import cloudinstall.state
 from cloudinstall import utils
-from cloudinstall.maas import MaasState
-from cloudinstall.juju import JujuState
-from cloudinstall.maas.client import MaasClient
 
 
 NOVA_CLOUD_CONTROLLER = "nova-cloud-controller"
@@ -129,35 +127,22 @@ def juju_config_arg(charm):
     return config.format(path=path)
 
 
-def poll_state(auth=None):
+def poll_state():
     """ Polls current state of Juju and MAAS
-
-    @param auth: MAAS Auth class
     """
-    # Capture Juju state
-    juju = utils._run('juju status')
-    if not juju:
-        raise Exception("Juju State is empty!")
-    juju = JujuState(StringIO(juju.decode('ascii')))
+        # # Capture Maas state
+        # maas = MaasState(_maas_client.nodes)
+        # _maas_client.tag_fpi(maas)
+        # _maas_client.nodes_accept_all()
+        # _maas_client.tag_name(maas)
 
-    # Login to MAAS
-    maas = None
-    if auth and not auth.is_logged_in:
-        auth.get_api_key('root')
-        auth.login()
-
-        # Load Client routines
-        m_client = MaasClient(auth=auth)
-
-        # Capture Maas state
-        maas = MaasState(m_client.nodes)
-        m_client.tag_fpi(maas)
-        m_client.nodes_accept_all()
-        m_client.tag_name(maas)
-    return parse_state(juju, maas), juju
+    if pegasus.SINGLE_SYSTEM:
+        return parse_state(cloudinstall.state.Juju()), juju
+    return parse_state(cloudinstall.state.Juju(),
+                       cloudinstall.state.Maas()), juju
 
 
-def parse_state(juju, maas=None):
+def parse_state(juju=None, maas=None):
     """ Parses the current state of juju containers and maas nodes
 
     @param juju: juju polled state

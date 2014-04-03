@@ -1,5 +1,5 @@
 #
-# __init__.py - MAAS instance state
+# __init__.py
 #
 # Copyright 2014 Canonical, Ltd.
 #
@@ -15,33 +15,3 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-class MaasState:
-    DECLARED = 0
-    COMMISSIONING = 1
-    FAILED_TESTS = 2
-    MISSING = 3
-    READY = 4
-    RESERVED = 5
-    ALLOCATED = 6
-    RETIRED = 7
-
-    def __init__(self, maas):
-        self._maas = maas
-
-    def __iter__(self):
-        return iter(self._maas)
-
-    def hostname_for_instance_id(self, id):
-        for machine in self:
-            if machine['resource_uri'] == id:
-                return machine['hostname']
-
-    @property
-    def machines(self):
-        return len(self._maas)
-
-    def num_in_state(self, state):
-        return len(list(filter(lambda m: int(m["status"]) == state,
-                               self._maas)))

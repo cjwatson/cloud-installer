@@ -52,7 +52,7 @@ NODE_HEADER = "|".join(["{fqdn:<20}", "{cpu_count:<6}", "{memory:<10}",
 
 STYLES = [
     ('body',         'white',      'black',),
-    ('border',       'brown',      'dark magenta'),
+    ('border',       'white',      'dark magenta'),
     ('focus',        'black',      'dark green'),
     ('dialog',       'black',      'dark cyan'),
     ('list_title',   'black',      'light gray',),
@@ -121,8 +121,10 @@ class ControllerOverlay(TextOverlay):
         controllers = [n for n in allocated
                        if pegasus.NOVA_CLOUD_CONTROLLER in n.get('charms', [])]
 
-        if (len(allocated) == 0 and len(unallocated) > 0 or
-            pegasus.SINGLE_SYSTEM):
+        if (len(allocated) == 0 and len(unallocated) > 0 and
+            not pegasus.SINGLE_SYSTEM):
+            self.command_runner.add_machine()
+        elif len(allocated) == 0 and pegasus.SINGLE_SYSTEM:
             self.command_runner.add_machine()
         elif len(allocated) > 0 and pegasus.MULTI_SYSTEM:
             id = allocated[0]['machine_no']
@@ -195,13 +197,17 @@ class ChangeStateDialog(urwid.Overlay):
 
 
 class Node(urwid.Text):
-    """ Metadata is a dict with the following:
-        charm: the charm name of this node, if it has one,
-        fqdn: fully qualified domain name,
-        cpu_count, memory (in MB), storage (in GB),
-        id: the MAAS resource_uri/juju instance-id
+    """ A single node
     """
     def __init__(self, metadata, open_dialog):
+        """
+        @param open_dialog: ui dialog
+        @param metadata: dict with the following:
+        { charm: the charm name of this node,
+          fqdn: fully qualified domain name,
+          cpu_count, memory (in MB), storage (in GB),
+          id: the MAAS resource_uri/juju instance-id }
+        """
         urwid.Text.__init__(self, "")
         self.allocated = 'charms' in metadata
         if self.allocated:
@@ -213,20 +219,24 @@ class Node(urwid.Text):
 
     @property
     def is_horizon(self):
+        """ are we a dashboard? """
         return self.allocated and \
             pegasus.OPENSTACK_DASHBOARD in self.metadata['charms']
 
     @property
     def is_compute(self):
+        """ are we a compute node? """
         return self.allocated and \
             pegasus.NOVA_COMPUTE in self.metadata['charms']
 
     @property
     def metadata(self):
+        """ return copy of our metadata """
         return self._metadata
 
     @metadata.setter
     def metadata(self, val):
+        """ metadata setters """
         self._metadata = val
         md = self._metadata.copy()
         tags = ''
@@ -237,6 +247,7 @@ class Node(urwid.Text):
 
     @property
     def name(self):
+        """ fully qualified domain name of node """
         return self.metadata['fqdn']
 
     def keypress(self, size, key):
@@ -380,7 +391,7 @@ def _make_header(rest):
 # TODO: This and CommandRunner should really be merged
 class ConsoleMode(urwid.Frame):
     def __init__(self):
-        header = _make_header("(f8 switches to node view mode)")
+        header = _make_header("(F8 switches to node view mode)")
         self.command_runner = CommandRunner()
         urwid.Frame.__init__(self, header=header, body=self.command_runner)
 
@@ -390,8 +401,8 @@ class ConsoleMode(urwid.Frame):
 
 class NodeViewMode(urwid.Frame):
     def __init__(self, loop, get_data, command_runner):
-        f6 = ', f6 to add another node' if pegasus.SINGLE_SYSTEM else ''
-        header = _make_header("(f8 switches to console mode%s)" % f6)
+        f6 = ', F6 to add another node' if pegasus.SINGLE_SYSTEM else ''
+        header = _make_header("(F8 switches to console mode%s)" % f6)
 
         self.timer = urwid.Text("", align="right")
         self.url = urwid.Text("")

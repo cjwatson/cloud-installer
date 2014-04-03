@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from cloudinstall.maas import MaasState
+import cloudinstall.maas
+import cloudinstall.maas.auth
 from requests_oauthlib import OAuth1
 import requests
 import json
@@ -24,17 +25,9 @@ import json
 from subprocess import check_call, CalledProcessError, DEVNULL
 
 
-class MaasClient:
+class Client:
     """ Client Class
     """
-
-    def __init__(self, auth):
-        """ Entry point to client routines for interfacing
-        with MAAS api.
-
-        @param auth: MAAS Authorization class (required)
-        """
-        self.auth = auth
 
     def _oauth(self):
         """ Generates OAuth attributes for protected resources
@@ -49,6 +42,7 @@ class MaasClient:
                        signature_type='query')
         return oauth
 
+    @cloudinstall.maas.auth.authenticated
     def get(self, url, params=None):
         """ Performs a authenticated GET against a MAAS endpoint
 
@@ -59,6 +53,7 @@ class MaasClient:
                             auth=self._oauth(),
                             params=params)
 
+    @cloudinstall.maas.auth.authenticated
     def post(self, url, params=None):
         """ Performs a authenticated POST against a MAAS endpoint
 
@@ -69,6 +64,7 @@ class MaasClient:
                              auth=self._oauth(),
                              data=params)
 
+    @cloudinstall.maas.auth.authenticated
     def delete(self, url, params=None):
         """ Performs a authenticated DELETE against a MAAS endpoint
 
@@ -247,7 +243,7 @@ class MaasClient:
         FPI_TAG = 'use-fastpath-installer'
         self.tag_new(FPI_TAG)
         for machine in maas:
-            if machine['status'] == MaasState.DECLARED:
+            if machine['status'] == cloudinstall.maas.MaasState.DECLARED:
                 self.tag_machine(FPI_TAG, machine['system_id'])
 
     ###########################################################################
